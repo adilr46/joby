@@ -1,0 +1,12 @@
+{
+  "name": "@joby/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@joby/application": "workspace:*",
+    "@joby/social": "workspace:*",
+    "@joby/database": "workspace:*",
+    "@joby/events": "workspace:*"
+  }
+}

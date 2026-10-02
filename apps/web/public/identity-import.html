@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Create your Joby · Joby</title>
+  <link rel="stylesheet" href="/identity/import.css">
+  <script src="/identity/import.js" defer></script>
+</head>
+<body>
+  <main>
+    <header><a href="/identity/import" aria-label="Joby home">Joby</a><span>Your career, organised</span></header>
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">Step 1 of 33</p>
+      <h1 id="page-title">Upload your CV to build your existing profile.</h1>
+      <p>Start your Joby with the experience you already have. You will review every proposed profile detail before it is added.</p>
+    </section>
+
+    <form id="import-form" class="card">
+      <label for="username">Choose your Joby username</label>
+      <input id="username" name="username" required maxlength="32" autocomplete="username" pattern="[A-Za-z0-9_-]+" placeholder="e.g. adilrahman">
+      <p class="hint">Letters, numbers, hyphens, and underscores only.</p>
+
+      <label for="file">Upload your CV <span>(PDF)</span></label>
+      <label class="upload" for="file"><span id="file-name">Choose your CV</span><span class="upload-action">Browse files</span><input id="file" type="file" required accept=".pdf,application/pdf"></label>
+      <p class="hint">Joby reads the existing text layer from your PDF and keeps its column layout where possible. Scanned or image-only PDFs need a text-layer export.</p>
+
+      <button id="submit" type="submit">Create your Joby</button>
+    </form>
+
+    <section id="result" class="card" hidden aria-live="polite" aria-labelledby="result-title">
+      <p class="eyebrow">Your Joby is being created</p>
+      <h2 id="result-title">Preparing your existing profile</h2>
+      <p id="result-message">Your CV is safely captured. Joby is preparing your profile for review.</p>
+      <dl>
+        <div><dt>Joby username</dt><dd id="result-username"></dd></div>
+        <div><dt>Import status</dt><dd id="result-status"></dd></div>
+      </dl>
+      <div class="actions"><button id="check-status" type="button" class="secondary">Check status</button><button id="start-over" type="button" class="link">Create another Joby</button></div>
+      <p id="next-step" class="hint"></p>
+    </section>
+  </main>
+</body>
+</html>

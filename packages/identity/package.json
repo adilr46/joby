@@ -1,0 +1,17 @@
+{
+  "name": "@joby/identity",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./representation": "./src/representation/index.ts",
+    "./representation/runtime": "./src/representation/runtime.ts",
+    "./runtime": "./src/runtime.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "dependencies": {
+    "@joby/database": "workspace:*",
+    "@joby/events": "workspace:*"
+  }
+}

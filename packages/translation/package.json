@@ -1,0 +1,17 @@
+{
+  "name": "@joby/translation",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./adaptation": "./src/adaptation/index.ts",
+    "./execution": "./src/execution/index.ts",
+    "./testing": "./src/testing.ts",
+    "./interview": "./src/interview/index.ts"
+  },
+  "dependencies": {
+    "@joby/database": "workspace:*",
+    "@joby/events": "workspace:*",
+    "@joby/identity": "workspace:*"
+  }
+}

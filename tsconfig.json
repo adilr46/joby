@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node"],
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": false,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "noEmit": true,
+    "resolveJsonModule": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@joby/social": ["packages/social/src/index.ts"],
+      "@joby/events": ["packages/events/src/index.ts"],
+      "@joby/database": ["packages/database/src/index.ts"],
+      "@joby/identity": ["packages/identity/src/index.ts"],
+      "@joby/opportunity": ["packages/opportunity/src/index.ts"],
+      "@joby/router": ["packages/router/src/index.ts"],
+      "@joby/pci": ["packages/pci/src/index.ts"],
+      "@joby/application": ["packages/application/src/index.ts"],
+      "@joby/portal": ["packages/portal/src/index.ts"],
+      "@joby/opportunity/runtime": ["packages/opportunity/src/runtime.ts"],
+      "@joby/identity/representation": ["packages/identity/src/representation/index.ts"],
+      "@joby/identity/representation/runtime": ["packages/identity/src/representation/runtime.ts"],
+      "@joby/identity/runtime": ["packages/identity/src/runtime.ts"],
+      "@joby/identity/testing": ["packages/identity/src/testing.ts"],
+
+      "@joby/translation/adaptation": ["packages/translation/src/adaptation/index.ts"],
+      "@joby/translation/execution": ["packages/translation/src/execution/index.ts"],
+      "@joby/translation/interview": ["packages/translation/src/interview/index.ts"],
+      "@joby/translation/testing": ["packages/translation/src/testing.ts"]
+    }
+  },
+  "include": ["packages/*/src/**/*.ts", "apps/*/src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts", "*.config.ts"]
+}

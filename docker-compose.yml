@@ -1,0 +1,23 @@
+# One PostgreSQL database for the whole system (ADR 0003). Domain ownership is by
+# convention and review, not by separate databases — do not add a second service here
+# without an ADR.
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: joby-postgres
+    environment:
+      POSTGRES_USER: joby
+      POSTGRES_PASSWORD: joby
+      POSTGRES_DB: joby
+    ports:
+      - '5433:5432'
+    volumes:
+      - joby-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U joby -d joby']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  joby-pgdata:

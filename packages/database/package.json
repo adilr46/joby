@@ -1,0 +1,13 @@
+{
+  "name": "@joby/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@joby/events": "workspace:*",
+    "pg": "^8.13.1"
+  }
+}

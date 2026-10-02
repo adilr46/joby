@@ -1,0 +1,10 @@
+{
+  "name": "@joby/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@joby/database": "workspace:*",
+    "@joby/events": "workspace:*"
+  }
+}

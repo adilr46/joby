@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your applications · Joby</title><link rel="stylesheet" href="/applications/manual.css">
+<script src="/applications/manual.js" defer></script></head>
+<body><main>
+<header><a href="/applications/manual" aria-label="Joby home">Joby</a><span>Your career, in progress</span></header>
+<h1>Bring your progress with you.</h1>
+<p>Applied somewhere outside Joby? Add it here to keep your profile up to date.</p>
+<form id="signin"><label for="token">Access token</label><div class="row"><input id="token" type="password" autocomplete="off" required><button>Load my profile</button></div><small>Your token stays in this tab and is never saved.</small></form>
+<p id="status" role="status" aria-live="polite"></p>
+<section aria-labelledby="add-title"><h2 id="add-title">Add an application</h2>
+<form id="entry"><div class="grid"><label>Company<input name="company" required maxlength="200" placeholder="e.g. Palantir"></label>
+<label>Role<input name="role" required maxlength="200" placeholder="e.g. Software Engineering Intern"></label>
+<label>Current stage<select name="stage" required><option value="submitted">Applied</option><option value="under_review">Under review</option><option value="screening">Screening / OA</option><option value="interviewing">Interviewing</option><option value="offer">Offer</option><option value="rejected">Rejected</option><option value="withdrawn">Withdrawn</option></select></label>
+<label>When did you reach this stage?<input name="occurredAt" type="date"><small>Optional. Leave empty to record today.</small></label></div>
+<p class="privacy">Visible to you by default. You choose which progress to share with peers.</p><button id="save">Add to my profile</button></form></section>
+<section aria-labelledby="cohort-title"><details><summary id="cohort-title">Choose a peer group for sharing</summary>
+<p>Joining a group does not share your applications. You choose each signal and audience below.</p>
+<form id="cohort"><div class="grid"><label>University<input name="university" maxlength="160" placeholder="Bath"></label>
+<label>Degree<input name="degree" maxlength="160" placeholder="Computer Science"></label>
+<label>Career track<input name="careerTrack" maxlength="160" placeholder="SWE"></label>
+<label>Recruiting cycle<input name="recruitingCycle" maxlength="160" required placeholder="2027 internships"></label>
+<label>Country<input name="country" maxlength="160" placeholder="UK"></label>
+<label>Peer type<input name="audience" maxlength="160" placeholder="students"></label></div><p><button>Join peer group</button></p></form></details></section>
+<section aria-labelledby="profile-title"><div class="row"><h2 id="profile-title">Your profile</h2><span id="links"></span></div>
+<p id="empty">Sign in to see your applications.</p><div id="applications"></div></section>
+</main></body></html>

@@ -1,0 +1,23 @@
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db
+
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+.vscode/
+.idea/
+
+# Claude Code local settings; committed config lives in .claude/
+.claude/settings.local.json
