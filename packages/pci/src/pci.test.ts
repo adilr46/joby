@@ -41,9 +41,17 @@ describe('the current model has learned nothing, and says so', () => {
       representationIds: ['rep-1'],
     });
 
-    expect(person).toEqual({ personId: 'person-1', observations: [], supportingApplications: 0 });
+    expect(person).toEqual({
+      personId: 'person-1',
+      observations: [],
+      supportingApplications: 0,
+      sharedSupport: 0,
+      basis: 'personal',
+    });
     expect(context.observations).toEqual([]);
     expect(context.supportingApplications).toBe(0);
+    expect(context.sharedSupport).toBe(0);
+    expect(context.basis).toBe('personal');
     expect(routing.weights.size).toBe(0);
   });
 
@@ -88,6 +96,25 @@ describe('what PCI cannot do', () => {
   });
 });
 
+describe('prior basis is always declared so consumers can present priors honestly', () => {
+  it('basis is present on person-side priors', async () => {
+    // A prior with basis: "shared" must never be presented as personal insight (ADR 0040, JOBY_MEMORY §7).
+    // NoLearnedPci has no shared model yet, so it returns basis: "personal" with zero support —
+    // the honest answer when nothing has been learned from either layer.
+    const pci = new NoLearnedPci();
+    const person = await pci.personSidePrior('person-1');
+    expect(person.basis).toBeDefined();
+    expect(['personal', 'shared', 'both']).toContain(person.basis);
+  });
+
+  it('basis is present on context-side priors', async () => {
+    const pci = new NoLearnedPci();
+    const context = await pci.contextSidePrior({ personId: 'person-1', opportunityId: 'opp-1' });
+    expect(context.basis).toBeDefined();
+    expect(['personal', 'shared', 'both']).toContain(context.basis);
+  });
+});
+
 describe('the slow learning PCI implementation', () => {
   const observation: CareerObservation = {
     observationId: 'obs-1',
@@ -118,5 +145,20 @@ describe('the slow learning PCI implementation', () => {
     expect(state.evidenceCounts.get('calibration')).toBe(1);
     expect(state.byRepresentationTrack.get('SWE')!.confidence).toBeGreaterThan(0);
     expect(state.byRepresentationTrack.get('SWE')!.confidence).toBeLessThan(0.2);
+  });
+
+  it('exposes basis and sharedSupport on priors after personal evidence is observed', async () => {
+    const pci = new SlowLearningPci();
+    await pci.observeCareerObservation!(observation);
+
+    const person = await pci.personSidePrior('person-1');
+    // SlowLearningPci has no shared layer yet, so sharedSupport is 0 and basis is personal.
+    expect(person.sharedSupport).toBe(0);
+    expect(person.basis).toBe('personal');
+    expect(person.supportingApplications).toBeGreaterThan(0);
+
+    const context = await pci.contextSidePrior({ personId: 'person-1', opportunityId: 'opp-1' });
+    expect(context.sharedSupport).toBe(0);
+    expect(context.basis).toBe('personal');
   });
 });

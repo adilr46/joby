@@ -56,20 +56,43 @@ export interface ResolvedApplicationEvidence {
   readonly signals: readonly ResolvedEvidenceSignal[];
 }
 
+/**
+ * Where a prior came from. Consumers must not present shared-only priors as personal insight.
+ *
+ * - `'personal'`  — built entirely from this person's own resolved evidence.
+ * - `'shared'`    — built from population patterns; no personal evidence yet.
+ * - `'both'`      — personal evidence exists and has adjusted the shared starting point.
+ */
+export type PriorBasis = 'personal' | 'shared' | 'both';
+
 /** Person-side: how this person tends to be represented well, and where they tend to correct Joby. */
 export interface PersonSidePrior {
   readonly personId: string;
   /** Human-readable, because a prior nobody can read is a prior nobody can challenge. */
   readonly observations: readonly string[];
-  /** How much resolved evidence stands behind this. Zero is the honest starting answer. */
+  /** How much of this person's own resolved evidence stands behind this. Zero is the honest starting answer. */
   readonly supportingApplications: number;
+  /**
+   * Cross-person aggregate patterns behind the shared starting point (ADR 0040).
+   * Zero until a `LayeredPci` with real shared-layer backing is in place.
+   */
+  readonly sharedSupport: number;
+  /**
+   * Where the prior came from. A `'shared'`-basis prior must never be presented as
+   * personal insight — that is an evidence-proportionality violation (JOBY_MEMORY §7).
+   */
+  readonly basis: PriorBasis;
 }
 
 /** Context-side: recurring patterns about opportunities of this kind. Never opportunity evidence. */
 export interface ContextSidePrior {
   readonly opportunityId: string;
   readonly observations: readonly string[];
+  /** How much of this person's own resolved evidence stands behind this. */
   readonly supportingApplications: number;
+  /** Cross-person aggregate patterns behind the shared starting point (ADR 0040). */
+  readonly sharedSupport: number;
+  readonly basis: PriorBasis;
 }
 
 /** Routing: a weight per representation. Consumed by Router as a hint it may bound or ignore. */
@@ -164,11 +187,11 @@ export class NoLearnedPci implements PciModel {
   }
 
   async personSidePrior(personId: string): Promise<PersonSidePrior> {
-    return { personId, observations: [], supportingApplications: 0 };
+    return { personId, observations: [], supportingApplications: 0, sharedSupport: 0, basis: 'personal' };
   }
 
   async contextSidePrior(input: { personId: string; opportunityId: string }): Promise<ContextSidePrior> {
-    return { opportunityId: input.opportunityId, observations: [], supportingApplications: 0 };
+    return { opportunityId: input.opportunityId, observations: [], supportingApplications: 0, sharedSupport: 0, basis: 'personal' };
   }
 
   async routingPrior(_input: {
@@ -210,18 +233,24 @@ export class SlowLearningPci implements PciModel {
   }
 
   async personSidePrior(personId: string): Promise<PersonSidePrior> {
+    const count = this.#evidenceCounts.get('preference') ?? 0;
     return {
       personId,
       observations: [...this.#preference.entries()].map(([track, state]) => `${track}: preference prior ${state.value.toFixed(2)}`),
-      supportingApplications: this.#evidenceCounts.get('preference') ?? 0,
+      supportingApplications: count,
+      sharedSupport: 0,
+      basis: 'personal',
     };
   }
 
   async contextSidePrior(input: { personId: string; opportunityId: string }): Promise<ContextSidePrior> {
+    const count = this.#evidenceCounts.get('accessibility') ?? 0;
     return {
       opportunityId: input.opportunityId,
       observations: [...this.#accessibility.entries()].map(([track, state]) => `${track}: accessibility prior ${state.value.toFixed(2)}`),
-      supportingApplications: this.#evidenceCounts.get('accessibility') ?? 0,
+      supportingApplications: count,
+      sharedSupport: 0,
+      basis: 'personal',
     };
   }
 

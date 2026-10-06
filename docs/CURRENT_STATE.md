@@ -7,9 +7,12 @@
 > **Execution** (Application Session, page surface interpretation, surface resolution and
 > deterministic action execution, and the recursive execution loop tying them together) run.
 > Interview Intelligence prepares evidence-grounded packets, supports temporary rehearsal, parses
-> invite platform facts, and routes approved debrief facts to Application. **PCI has its contract but no learning, and
-> nothing is wired to call it yet. No submission, no real `JobyQueryPort` adapter, no browser-driving
-> loop, and no drafting of `generated_answer` requirements exist.**
+> invite platform facts, and routes approved debrief facts to Application. **PCI now has a real
+> Beta-Bernoulli `LayeredPci` (ADR 0041) wired into `apps/api` in place of `NoLearnedPci`, but
+> nothing calls `pci.observe` yet** — `OutcomeObserved` has no PCI subscriber, so both
+> `pci_shared_cell` and `pci_personal_cell` stay empty and every prior still reads back as
+> `basis: 'shared', sharedSupport: 0` at runtime. No submission, no real `JobyQueryPort` adapter,
+> no browser-driving loop, and no drafting of `generated_answer` requirements exist.**
 
 > **Terminology:** ADR 0031 is authoritative:
 > `Identity (Profile Units · Representations · Stated Context)`, then
@@ -32,6 +35,29 @@ Adaptation as an optional prior.
 M0 — Foundations is done: the repository type-checks, tests, and runs.
 
 ## Recently Completed
+
+- **PCI: shared/personal Beta-Bernoulli layered model (ADRs 0040, 0041, 2026-10-03).** PCI's
+  learning structure is now decided and the first real learner exists.
+  - ADR 0040 decided the two-layer shape: a **shared layer** learning population patterns across
+    all persons, and a **personal layer** that starts from the shared prior and adjusts toward
+    this person's own resolved evidence. `PersonSidePrior` and `ContextSidePrior` gained
+    `sharedSupport` and `basis: 'personal' | 'shared' | 'both'` so consumers can never present a
+    shared-only prior as personal insight.
+  - ADR 0041 resolved the blend formula as exact Bayesian composition
+    (`α_blend = α_shared + α_personal`), the feature extraction function (`extractSharedFeatures` —
+    deterministic, identity-free), the database schema (`pci_shared_cell` / `pci_personal_cell`,
+    two separate tables rather than a sentinel column, so the privacy boundary is structural, not
+    conventional), and declined to set a minimum shared corpus — `sharedSupport` already tells
+    consumers how much to trust a prior.
+  - **`LayeredPci`** (`packages/pci/src/layered.ts`) implements `PciModel`: one Beta-Bernoulli pair
+    per `(signal_family, representation_track, role_domain)` cell, `world_response` and
+    `user_response` kept in separate cells so population preference can never be read as population
+    effectiveness. Composed into `apps/api` in place of `NoLearnedPci`.
+  - Migration `0020_pci_cells.sql` adds both tables with Laplace-smoothed shared defaults
+    (`α=β=1`, so an empty cell is a genuine uniform prior, not an invented belief).
+  - **Not wired:** nothing calls `pci.observe` yet. `OutcomeObserved` has no PCI subscriber, so
+    both tables stay empty in every environment until that handler is built, and every prior reads
+    back exactly what `NoLearnedPci` always returned.
 
 - **Interview Intelligence prepare/rehearse/debrief slice (2026-09-30).** The first Joby-native
   implementation of the career-ops interview flow is now available without making generated advice
@@ -1181,7 +1207,7 @@ Four distinct levels:
 | Opportunity understanding | ✅ | ✅ | ❌ — the port only | ❌ — an in-memory stand-in in `apps/api` supplies it |
 | Application Record as the temporal spine | ✅ | ✅ | ❌ | ❌ — Application is documentation-only |
 | Fast / Slower loop separation | ✅ | ✅ | ❌ | ❌ |
-| PCI learning | ✅ | ✅ | ❌ | ❌ |
+| PCI learning | ✅ | ✅ — ADRs 0040, 0041 | ✅ — `LayeredPci`, Beta-Bernoulli shared + personal cells | Partial — composed in `apps/api`'s Router wiring; both tables are empty because nothing calls `observe` yet |
 | Opportunity / Trajectory Evaluation | ✅ | ✅ | ❌ | ❌ |
 | Records | ✅ | ✅ | Partial — only the `ApplicationSubmitted` / `InterviewRecorded` / `OutcomeObserved` event contracts | ❌ |
 | Event contracts and dispatcher | ✅ | ✅ | ✅ | ✅ — runs in both `apps/api` and `apps/worker` |

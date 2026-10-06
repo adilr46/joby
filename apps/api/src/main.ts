@@ -18,7 +18,7 @@ import { createDatabase, databaseConfigFromEnv, type Database } from '@joby/data
 import { createOpportunity, createOpportunityUnderstanding } from '@joby/opportunity';
 import type { OpportunityUnderstandingPort } from '@joby/translation/adaptation';
 import { createRouter, OpportunityNotEvaluatableError, OpportunityNotRoutableError } from '@joby/router';
-import { NoLearnedPci } from '@joby/pci';
+import { LayeredPci } from '@joby/pci';
 import { createAdaptation } from '@joby/translation/adaptation';
 import {
   ClaudeSurfaceInterpreter,
@@ -87,11 +87,19 @@ const social = createSocial({
 /**
  * **Router** — which Representation should this opportunity start from? (ADR 0031)
  *
- * The learned model is `NoLearnedPci`: it has learned nothing and says so, which is the correct
- * answer today. Router already bounds a prior's influence below one covered capability, so swapping
- * in a real model later changes tie-breaks and never overrules what the posting asks for.
+ * The learned model is `LayeredPci` (ADR 0041): Beta-Bernoulli shared population priors, blended
+ * with this person's own resolved evidence at read time. With no rows yet migrated or observed it
+ * returns the same empty/zero-support answer `NoLearnedPci` always gave, through real SQL against
+ * `pci_shared_cell` / `pci_personal_cell` — run `pnpm db:migrate` before starting this process, or
+ * every prior read throws instead of returning an honest empty prior. Router already bounds a
+ * prior's influence below one covered capability, so a real learned weight changes tie-breaks and
+ * never overrules what the posting asks for.
+ *
+ * Nothing calls `pci.observe` yet — Application's `OutcomeObserved` has no PCI subscriber (ADR
+ * 0031 unresolved work). Until that handler exists, both tables stay empty and every prior reads
+ * back as `basis: 'shared', sharedSupport: 0`.
  */
-const pci = new NoLearnedPci();
+const pci = new LayeredPci(db);
 const router = createRouter({
   identity: {
     listRoutableRepresentations: async (personId) => {

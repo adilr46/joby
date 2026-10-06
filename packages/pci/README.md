@@ -1,7 +1,7 @@
 # PCI
 
-**Status: contract only, no learning implemented.** The independent learned PERSON × WORLD authority
-(ADR 0031).
+**Status: `LayeredPci` implements real Beta-Bernoulli learning (ADRs 0040, 0041); nothing calls
+`observe` yet.** The independent learned PERSON × WORLD authority (ADR 0031).
 
 ```text
 resolved Application evidence  ->  PCI  ->  person-side / context-side / routing priors
@@ -53,15 +53,73 @@ simple / database-backed priors
 Every stage sits behind `PciModel`. A consumer asks for priors and never learns which stage
 answered, so the progression is an implementation choice rather than an architectural event.
 
-## Why nothing is learned yet
+## Two layers: shared and personal (ADR 0040)
 
-The feature representation, target signals, loss function and update mechanism are undecided. A
-plausible default would be a learned belief nobody chose, applied to someone's career.
+PCI learns at two depths, both behind the same `PciModel` interface:
 
-`NoLearnedPci` returns empty priors with **zero support**, and that is the honest answer rather than
-a gap: at the Baseline there is almost nothing to learn from. `observe` accepts resolved evidence and
-retains none — Application is the durable record, and storing a second copy before the model that
-would use it exists is persistence ahead of a decision.
+```text
+SHARED LAYER    population patterns, no personId, keyed on (signal family, track, role domain)
+PERSONAL LAYER  this person's own counts, blended with the shared layer at read time
+```
+
+A new user gets the shared layer's population prior as a real starting point, honestly labelled
+`basis: 'shared'`. An experienced user's own evidence increasingly dominates as it accumulates.
+Neither layer is presented as more than it is — every prior carries `sharedSupport` and `basis` so
+a consumer can never present population patterns as personal insight.
+
+## The model: Beta-Bernoulli (ADR 0041)
+
+`LayeredPci` is the first real learner. Each signal family is one Bernoulli trial per resolved
+application — `world_response` asks "did this reach an interview?", `user_response` asks "did the
+person accept the framing unedited?" — and each trial updates a Beta distribution:
+
+```text
+Prior:       θ ~ Beta(α, β)
+Posterior:   θ | x ~ Beta(α + successes, β + failures)
+E[θ]         = α / (α + β)              ← the prior returned
+```
+
+**The two families currently write to different layers — staged, not permanent.**
+`world_response` updates both the shared cell and this person's own personal cell — how the
+market responds to *this* person is worth tracking individually. `user_response` updates the
+**shared cell only, for now** — deferred, not excluded. The type's own contract documents
+`user_response` as evidencing "how this person prefers to operate and be represented", an
+explicitly *personal* signal, the same status `world_response` has; starting shared-only is a
+sequencing choice (establish the population pattern first), not a verdict that this signal is
+less personal. The seam to add a personal term later needs no schema change — `observe` just
+needs to pass `{ personId }` for the `user` trial the same way it already does for `world`.
+
+Presence, not permission: whether a `user_response` trial runs at all is just whether the
+evidence carries those signals, never a separate "should we use this" decision.
+
+Where a personal cell exists, it is the shared posterior updated with this person's own counts —
+exact Bayesian composition, not a tuned blend weight:
+
+```text
+α_blend = α_shared + α_personal
+β_blend = β_shared + β_personal
+```
+
+With zero personal evidence, the blended estimate equals the shared prior. With many personal
+applications, `α_personal + β_personal` dominates the sum and personal evidence wins — automatically,
+without a tuning parameter to choose. Conjugacy means every update is two integer increments: no
+retraining, no gradient, no model versioning.
+
+One consequence worth naming: `personSidePrior` (built from `user_response` cells) always comes
+back `basis: 'shared'` **today** — there is no personal term yet for it to blend. That changes the
+moment `user_response` gets its personal term; it is not how `personSidePrior` is meant to stay.
+
+Feature extraction (`extractSharedFeatures`) is pure and identity-free — it reads only
+`representationId` and a (currently coarse) role domain, never `personId` or signal free text.
+The shared table (`pci_shared_cell`) has no `person_id` column at all, so the privacy boundary is
+enforced by the schema, not by convention.
+
+## Why `NoLearnedPci` still exists
+
+`NoLearnedPci` remains the right choice wherever no database is available, or as the pre-migration
+default. It returns empty priors with **zero support**, which is still the honest answer when
+there is nothing to learn from — and `LayeredPci` against an empty database returns exactly the
+same numbers, through real SQL instead of a hardcoded zero.
 
 ## Hard boundaries
 

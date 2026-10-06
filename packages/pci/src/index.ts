@@ -38,6 +38,8 @@
  */
 
 export { NoLearnedPci, SlowLearningPci, deriveSignals } from './model';
+export { LayeredPci, extractSharedFeatures, toCellKey } from './layered';
+export type { SharedFeatures } from './layered';
 export type {
   CareerObservation,
   ContextSidePrior,
@@ -48,6 +50,7 @@ export type {
   PciSignalState,
   PciState,
   PersonSidePrior,
+  PriorBasis,
   ResolvedApplicationEvidence,
   ResolvedEvidenceSignal,
   RoutingPrior,
